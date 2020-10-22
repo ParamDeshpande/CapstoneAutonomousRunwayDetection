@@ -50,3 +50,13 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/e56d19217c1cdcfe/SIMPLEUDPCLIENTANDSERVER.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/adf526729c93fcf2/MAIN.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/dad8a5bcdb5d6263/QUEUE.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/e0428c6f26f7bcfe/TASKS.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/a336e9c2f4a05a7e/SIMPLEUDPCLIENTANDSERVER.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/653b734848cde563/NETWORKINTERFACE.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/Browse.VC.db
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/.suo
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/314aff8b50c944be/PORT.ipch
+.vs/FreeRTOS_Plus_TCP_Minimal/v16/ipch/AutoPCH/7d5fda8e001ed672/MAIN.ipch
