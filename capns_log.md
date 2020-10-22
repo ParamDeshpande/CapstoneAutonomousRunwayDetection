@@ -33,3 +33,23 @@ But it compiled and the program ran.
 6.33 PM 
 
 Deciding to make a git, to keep track of changes. Output file was alive, ie didnt fail, simply shows me a black img , although no edges , trying to see if the src canny code is corect on linux.
+
+22/10/20 
+
+1.24 PM 
+
+So I have modified the rsa to fit to my needs. 
+Ie encrypt no by number. see [rsa_reprise.c](src/rsa_reprise.c) ( although this is number by number I have a binary img so that doesnt really make sense to encrypt coz the pattern will be same, I couldn't think of other way of doing this, the example shown in the image converts the strings into nos and then sends to encrypt,  Im converting img pixels to nos and then sending those to encrypt , had that been a grayscale img thigs would be diff ,this is a binary img , plenty waste of computing I think) 
+
+
+and created a few bash scripts see files  `src/*.bash` for their subsequent build and execution.
+
+Now trying this stuff with canny.
+
+The stuff with canny is integrated, so encrypted shows well 0. 
+and 255 encrypted shows  .. some number . 
+
+I am adding a offset to the values , either way if anyone sees such data it'be pretty obvious but for the sake of *doing it righter* Im adding a offset. 
+so the output bin img would be not of 0 and random number but of random number and random number.
+
+I'll be now testing if I can send tcp packets .. well i wont spend too much time hopefully on it in windows.

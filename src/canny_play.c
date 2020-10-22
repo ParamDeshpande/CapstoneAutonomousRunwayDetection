@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#include "rsa.c"
+#include "rsa_reprise.c"
 
 #define MAX_BRIGHTNESS 255
 //#define M_PI 3.1415E0
@@ -449,16 +449,16 @@ int main(const int argc, const char ** const argv)
     }
     
 
-    for(int i=0; i<512; ++i){
-        for(int j=0; j< 512; ++j){
-        if( in_bitmap_data[i] != 0 ){
-            //printf(" hi %d" , i);
-        }
-        printf(" %d," , in_bitmap_data[i]);
-        }
-        //printf(" \n");
-
-    }
+    //for(int i=0; i<512; ++i){
+    //    for(int j=0; j< 512; ++j){
+    //    if( in_bitmap_data[i] != 0 ){
+    //        //printf(" hi %d" , i);
+    //    }
+    //    printf(" %d," , in_bitmap_data[i]);
+    //    }
+    //    //printf(" \n");
+    //
+    //}
     //for (size_t i = 0; i < (1U << ih.bitspp); i++) {
     //    const rgb_t color = {(uint8_t)i, (uint8_t)i, (uint8_t)i};
     //    printf(" %d:%d," , i, color);
@@ -471,15 +471,22 @@ int main(const int argc, const char ** const argv)
         canny_edge_detection(in_bitmap_data, &ih, 40, 80, 1.0);
     
     printf("%d\n", ih.bmp_bytesz);
-    FILE *fptr;
-    fptr = fopen("logs.txt","w");
+    FILE *fptrEncrypt,*fptrData;
+    fptrEncrypt = fopen("encryptedImg.txt","w");
+    fptrData = fopen("logs.txt","w");
+    int encryptedPixel =0;
+    rsa_setup();
     
-    for(int i=0; i< ih.bmp_bytesz; i=i+3){
-        for(int j=0;j<512;++j){
-        fprintf(fptr,"%d,",out_bitmap_data[i]);
-        }
-        fprintf(fptr,"\n");
-
+    for(int i=0; i< ih.bmp_bytesz; i=i+3){  //RGB SCHEME + binary img hence encrypting only 1 value rest are same
+        int encryptedPixel = encrypt(out_bitmap_data[i]);
+        fprintf(fptrEncrypt,"%d,",encryptedPixel);
+        fprintf(fptrData,"%d,",out_bitmap_data[i]);
+        
+        //for(int j=0;j<512;++j){
+        //fprintf(fptr,"%d,",out_bitmap_data[i]);
+        //}
+        //fprintf(fptr,"\n");
+    
         //printf(" %d," , out_bitmap_data[i]);
         //if( in_bitmap_data[i] != 0 ){
         //    printf("%d," , i);
@@ -489,9 +496,10 @@ int main(const int argc, const char ** const argv)
         //printf(" %d," , out_bitmap_data[i]);
         //}
         //printf(" \n");
-
+    
     }
-    fclose(fptr);
+    fclose(fptrEncrypt);
+    fclose(fptrData);
 
     if (out_bitmap_data == NULL) {
         fprintf(stderr, "main: failed canny_edge_detection.\n");
