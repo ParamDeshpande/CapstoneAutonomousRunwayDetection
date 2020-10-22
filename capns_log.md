@@ -53,3 +53,13 @@ I am adding a offset to the values , either way if anyone sees such data it'be p
 so the output bin img would be not of 0 and random number but of random number and random number.
 
 I'll be now testing if I can send tcp packets .. well i wont spend too much time hopefully on it in windows.
+
+9.46 PM 
+
+Sent and received TCP Packets. Using freeRTOS and my python code . 
+
+Followed this [freeRTOS thread](https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_TCP/TCP_Networking_Tutorial.html) step by step ... 
+
+And this python [socket programming guide.](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwj72bimzcjsAhU6yzgGHedjDecQFjAAegQIARAC&url=https%3A%2F%2Frealpython.com%2Fpython-sockets%2F&usg=AOvVaw2tdEuTXKhHE60pWe_ZyLIy)
+
+[FreeRTOS docs](https://www.freertos.org/FreeRTOS-Plus/FreeRTOS_Plus_TCP/TCP_Networking_Tutorial_TCP_Client_and_Server.html) to read and modify tcp parameters buffers socket size etc... 

@@ -90,6 +90,7 @@
 #include "SimpleUDPClientAndServer.h"
 #include "TCPEchoClient_SingleTasks.h"
 #include "demo_logging.h"
+#include "FreeRTOS_sockets.h"
 
 /* Private Includes */
 #include "src/canny.c"
@@ -187,8 +188,174 @@ static void helloTask(void){
 TaskHandle_t HT;
 TaskHandle_t canny_handle;
 TaskHandle_t storeImg_handle;
+TaskHandle_t socket_handle;
+//#define TEST_SOCKETS
+#ifdef TEST_SOCKETS
 
-#define TEST_CANNY
+
+void createSocket( void )
+{
+/* Variable to hold the created socket. */
+Socket_t xSocket;
+struct freertos_sockaddr xBindAddress;
+	printf("init values success \n");
+
+    /* Create a TCP socket. */
+    xSocket = FreeRTOS_socket( FREERTOS_AF_INET,
+                               FREERTOS_SOCK_STREAM,
+                               FREERTOS_IPPROTO_TCP );
+
+    /* Check the socket was created successfully. */
+    if( xSocket != FREERTOS_INVALID_SOCKET )
+    {
+        /* The socket was created successfully and can now be used to connect to
+        a remote socket using FreeRTOS_connect(), before sending data using
+        FreeRTOS_send().  Alternatively the socket can be bound to a port using
+        FreeRTOS_bind(), before listening for incoming connections using
+        FreeRTOS_listen(). */
+		printf(" socket success \n");
+
+    }
+    else	
+    {
+        /* There was insufficient FreeRTOS heap memory available for the socket
+        to be created. */
+	printf("insufficient heap \n");
+
+    }
+}
+
+
+void vCreateTCPClientSocket(void)
+{
+	Socket_t xClientSocket;
+
+	socklen_t xSize = sizeof(struct freertos_sockaddr);
+	static const TickType_t xTimeOut = pdMS_TO_TICKS(2000);
+
+	/* Attempt to open the socket. */
+	xClientSocket = FreeRTOS_socket(PF_INET,
+		SOCK_STREAM,  /* SOCK_STREAM for TCP. */
+		IPPROTO_TCP);
+
+	/* Check the socket was created. */
+	configASSERT(xClientSocket != FREERTOS_INVALID_SOCKET);
+
+	/* If FREERTOS_SO_RCVBUF or FREERTOS_SO_SNDBUF are to be used with
+	FreeRTOS_setsockopt() to change the buffer sizes from their default then do
+	it here!.  (see the FreeRTOS_setsockopt() documentation. */
+
+	/* If ipconfigUSE_TCP_WIN is set to 1 and FREERTOS_SO_WIN_PROPERTIES is to
+	be used with FreeRTOS_setsockopt() to change the sliding window size from
+	its default then do it here! (see the FreeRTOS_setsockopt()
+	documentation. */
+
+	/* Set send and receive time outs. */
+	FreeRTOS_setsockopt(xClientSocket,
+		0,
+		FREERTOS_SO_RCVTIMEO,
+		&xTimeOut,
+		sizeof(xTimeOut) );
+
+	FreeRTOS_setsockopt(xClientSocket,
+		0,
+		FREERTOS_SO_SNDTIMEO,
+		&xTimeOut,
+		sizeof(xTimeOut));
+
+	/* Bind the socket, but pass in NULL to let FreeRTOS+TCP choose the port number.
+	See the next source code snipped for an example of how to bind to a specific
+	port number. */
+	FreeRTOS_bind(xClientSocket, NULL, xSize);
+}
+
+
+void vTCPSend(char* pcBufferToTransmit, const size_t xTotalLengthToSend)
+{
+	Socket_t xSocket;
+	struct freertos_sockaddr xRemoteAddress;
+	BaseType_t xAlreadyTransmitted = 0, xBytesSent = 0;
+		 xRxTask = NULL;
+	size_t xLenToSend;
+	printf("init values success \n");
+
+	/* Set the IP address and port of the remote socket
+	to which this client socket will transmit. */
+	xRemoteAddress.sin_port = FreeRTOS_htons(5000);
+	xRemoteAddress.sin_addr = FreeRTOS_inet_addr_quick(192, 168, 0, 110);
+	printf("setup remote addr \n");
+
+	/* Create a socket. */
+	xSocket = FreeRTOS_socket(FREERTOS_AF_INET,
+		FREERTOS_SOCK_STREAM,/* FREERTOS_SOCK_STREAM for TCP. */
+		FREERTOS_IPPROTO_TCP);
+	configASSERT(xSocket != FREERTOS_INVALID_SOCKET);
+	printf("socket was created \n");
+	/* Connect to the remote socket.  The socket has not previously been bound to
+	a local port number so will get automatically bound to a local port inside
+	the FreeRTOS_connect() function. */
+	if (FreeRTOS_connect(xSocket, &xRemoteAddress, sizeof(xRemoteAddress)) == 0)
+	{
+		/* Keep sending until the entire buffer has been sent. */
+		while (xAlreadyTransmitted < xTotalLengthToSend)
+		{
+			/* How many bytes are left to send? */
+			xLenToSend = xTotalLengthToSend - xAlreadyTransmitted;
+			xBytesSent = FreeRTOS_send( /* The socket being sent to. */
+				xSocket,
+				/* The data being sent. */
+				&(pcBufferToTransmit[xAlreadyTransmitted]),
+				/* The remaining length of data to send. */
+				xLenToSend,
+				/* ulFlags. */
+				0);
+
+			if (xBytesSent >= 0)
+			{
+				/* Data was sent successfully. */
+				xAlreadyTransmitted += xBytesSent;
+			}
+			else
+			{
+				/* Error � break out of the loop for graceful socket close. */
+				break;
+			}
+		}
+	}
+
+	/* Initiate graceful shutdown. */
+	FreeRTOS_shutdown(xSocket, FREERTOS_SHUT_RDWR);
+
+	/* Wait for the socket to disconnect gracefully (indicated by FreeRTOS_recv()
+	returning a FREERTOS_EINVAL error) before closing the socket. */
+	while (FreeRTOS_recv(xSocket, pcBufferToTransmit, xTotalLengthToSend, 0) >= 0)
+	{
+		/* Wait for shutdown to complete.  If a receive block time is used then
+		this delay will not be necessary as FreeRTOS_recv() will place the RTOS task
+		into the Blocked state anyway. */
+		vTaskDelay((250));
+
+		/* Note � real applications should implement a timeout here, not just
+		loop forever. */
+	}
+
+	/* The socket has shut down and is safe to close. */
+	FreeRTOS_closesocket(xSocket);
+}
+TaskHandle_t hi_handle;
+void transmitHiTask(void){
+	char testMsg[] = "Does this work ?"; 
+	printf("sending data ... \n");
+	while(1){
+	vTCPSend((char *) testMsg, sizeof(testMsg));
+	vTaskDelay(1000);
+	}
+
+}
+
+#endif
+
+//#define TEST_CANNY
 #ifdef TEST_CANNY
 
 QueueHandle_t edgeQueue, rsaQueue;
@@ -295,7 +462,7 @@ const uint32_t ulLongTime_ms = pdMS_TO_TICKS( 1000UL );
 	are used if ipconfigUSE_DHCP is set to 0, or if ipconfigUSE_DHCP is set to 1
 	but a DHCP server cannot be	contacted. */
 	FreeRTOS_debug_printf( ( "FreeRTOS_IPInit\n" ) );
-	FreeRTOS_IPInit( ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress, ucMACAddress );
+	//FreeRTOS_IPInit( ucIPAddress, ucNetMask, ucGatewayAddress, ucDNSServerAddress, ucMACAddress );
 
 	
 	
@@ -303,6 +470,13 @@ const uint32_t ulLongTime_ms = pdMS_TO_TICKS( 1000UL );
 	#ifdef TEST_CANNY
 	xTaskCreate(canny_task, "Canny_Task", configMINIMAL_STACK_SIZE, NULL, 2, &canny_handle);
 	#endif
+	#ifdef TEST_SOCKETS
+	//xTaskCreate(transmitHiTask, "transmitHi_Task", configMINIMAL_STACK_SIZE, NULL, 2, &hi_handle);
+	//xTaskCreate(createSocket, "createSocket", 5000, NULL, 0, &socket_handle);
+	
+	#endif
+
+
 	/* Start the RTOS scheduler. */
 	FreeRTOS_debug_printf( ("vTaskStartScheduler\n") );
 	vTaskStartScheduler();
@@ -314,7 +488,8 @@ const uint32_t ulLongTime_ms = pdMS_TO_TICKS( 1000UL );
 	FreeRTOS web site for more details (this is standard text that is not not
 	really applicable to the Win32 simulator port). */
 	for( ;; )
-	{
+	{	
+		printf("heap overflow\n");
 		Sleep( ulLongTime_ms );
 	}
 }
@@ -375,6 +550,8 @@ static BaseType_t xTasksAlreadyCreated = pdFALSE;
 			/* See the comments above the definitions of these pre-processor
 			macros at the top of this file for a description of the individual
 			demo tasks. */
+			//xTaskCreate(createSocket, "createSocket", 5000, NULL, 0, &socket_handle);
+			
 			#if( mainCREATE_SIMPLE_UDP_CLIENT_SERVER_TASKS == 1 )
 			{
 				vStartSimpleUDPClientServerTasks( configMINIMAL_STACK_SIZE, mainSIMPLE_UDP_CLIENT_SERVER_PORT, mainSIMPLE_UDP_CLIENT_SERVER_TASK_PRIORITY );
