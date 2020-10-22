@@ -6,7 +6,7 @@
 static int primeNo1=11,primeNo2=13;
 static int n_rsa,t_rsa =0, flag;
 static long int e_rsa[100],d_rsa[100];
-
+static int rsa_offset_msg_val = 9;
 
 void calc_rsa_e();
 long int calc_rsa_d(long int);
@@ -73,6 +73,7 @@ long int calc_rsa_d(long int x)
 
 int encrypt(int plain_num)
 {
+    plain_num += rsa_offset_msg_val;
     long int key=e_rsa[0],k=1;
     static int i=0;
         
@@ -98,18 +99,27 @@ int decrypt(int cipher_num)
             k=k%n_rsa;
         }
         i++;
-    return k;
+    return k-rsa_offset_msg_val;
 }
 
+//#define DEBUG
+//#define RSA_REPRISE_MAIN
 
+
+#ifdef DEBUG
+#ifdef RSA_REPRISE_MAIN
 
 int main(){
-    rsa_setup();
-    printf("n is %d , t is %d , e is %d and d is %d \n" , n_rsa, t_rsa ,  e_rsa[0], d_rsa[0]);
-    int cipherNo = encrypt(33);
-    printf("cipherNo is %d\n" , cipherNo);
-    int plainNo = decrypt(cipherNo);
-    printf("plainNo is %d\n" , plainNo);
-
+    for(int i=0;i<10;++i){
+        rsa_setup();
+        printf("n is %d , t is %d , e is %d and d is %d \n" , n_rsa, t_rsa ,  e_rsa[0], d_rsa[0]);
+        int cipherNo = encrypt(255);
+        printf("cipherNo is %d\n" , cipherNo);
+        int plainNo = decrypt(cipherNo);
+        printf("plainNo is %d\n" , plainNo);
+    }
     return 0;
 }
+
+#endif
+#endif
